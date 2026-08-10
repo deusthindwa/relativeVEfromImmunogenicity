@@ -175,7 +175,7 @@ cp_summary <- summ %>%
 p_cp <- 
   ggplot(cp_summary, aes(x = serotype, y = median,  ymin = q2.5, ymax = q97.5)) +
   geom_pointrange() +
-  geom_hline(yintercept = 0, color = "red", linetype = "dashed", size = 0.6) +
+  #geom_hline(yintercept = 0, color = "red", linetype = "dashed", size = 0.6) +
   labs(x = "Serotype", y = "Change point (log IgG)", title = "Posterior change point by serotype") +
   theme_minimal(base_size = 11)
 
