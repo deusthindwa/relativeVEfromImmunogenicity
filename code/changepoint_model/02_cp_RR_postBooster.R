@@ -26,7 +26,7 @@ df_map <- tibble(serotype = serotypes, st = seq_along(serotypes), in_pcv7 = sero
 post_mat <- as.matrix(postBooster_fit$draws(variables = c("b0", "b1", "b3", "cp"), format = "draws_matrix"))
 
 n_draws <- nrow(post_mat)
-J       <- length(serotypes)
+J <- length(serotypes)
 
 #read a head-to-head xlsx and convert GMC/CI to log scale
 #se on the log scale comes from the width of the (log) CI / (2 * 1.96)
@@ -116,7 +116,7 @@ get_wtRR <- function(df_RR, comparison) {
 comparisons <- list(
   "PCV13 vs PCV7"  = list(file = here::here("data", "df_13v7_postboost_n5.xlsx"), pcv_low = "PCV7",  pcv_high = "PCV13"),
   "PCV13 vs PCV10" = list(file = here::here("data", "df_13v10_postboost_n1.xlsx"), pcv_low = "PCV10", pcv_high = "PCV13"),
-  "PCV14 vs PCV13"  = list(file = here::here("data", "df_14v13_postboost_n1.xlsx"), pcv_low = "PCV13",  pcv_high = "PCV14"),
+  "PCV14 vs PCV13"  = list(file = here::here("data", "df_14v13_postboost_n2.xlsx"), pcv_low = "PCV13",  pcv_high = "PCV14"),
   "PCV15 vs PCV13" = list(file = here::here("data", "df_15v13_postboost_n11.xlsx"), pcv_low = "PCV13", pcv_high = "PCV15"),
   "PCV20 vs PCV13" = list(file = here::here("data", "df_20v13_postboost_n4.xlsx"), pcv_low = "PCV13", pcv_high = "PCV20")
 )

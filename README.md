@@ -1,6 +1,8 @@
-#Change-point extension of Wong et al., JID 2025
-#deus
-Stan + NUTS re-implementation of the hierarchical Bayesian change-point model
+# A Change-Point Logistic Model and Linear Model of PCV effetiveness against targeted serotypes 
+
+### (Worked based on original work by Wong et al., JID 2025)
+
+Stan + NUTS implementation of the hierarchical Bayesian Logistic change-point model (& equiv Linear model)
 
 ## model
 
