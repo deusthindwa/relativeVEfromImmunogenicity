@@ -2,23 +2,18 @@
 #06/17/2026
 
 # ============================================================================
-# Fit the LOG-LOG LINEAR hierarchical Bayesian model to the post-booster
-# (age 13m) IgG + colonization data with NUTS.  This is the linear-model
-# counterpart of 01_changepoint_postBooster.R.
-# ============================================================================
 
-#load packages
-suppressPackageStartupMessages({
-  library(cmdstanr)
-  library(posterior)
-  library(bayesplot)
-  library(dplyr)
-  library(tidyr)
-  library(ggplot2)
-  library(readr)
-  library(readxl)
-  library(patchwork)
-})
+#load the require packages
+if (!require(pacman)){
+  install.packages("pacman")
+  install.packages("RcmdrPlugin.KMggplot2")
+}
+
+pacman::p_load(
+  char = c("tidyverse","remotes", "ggplot2", "dplyr","rio","tidyr","plyr","lubridate","reshape2","curl","patchwork", "posterior",
+           "deSolve","adaptivetau","data.table","scales","readr","MASS","rootSolve", "labelVector","PropCIs", "bayesplot", "readr",
+           "binom","coda","Rcpp","gmm","RcppArmadillo","devtools","lattice", "RColorBrewer", "lhs","png", "cmdstanr", "tibble",
+           "readxl","viridis","zoo","lattice","latex2exp","ape","cowplot","gridExtra","grid","ggpubr","here","deSolve", "loo"))
 
 #set seed for reproducibility
 set.seed(20250530)
@@ -56,7 +51,7 @@ stan_data <- list(
 )
 
 #compile stan code
-modigg <- cmdstanr::cmdstan_model(here::here('code', 'linear_model', '00_linear_model.stan'))
+#modigg <- cmdstanr::cmdstan_model(here::here('code', 'linear_model', '00_linear_model.stan'))
 
 #fit the stan model (this take considerable 30 minutes to runs)
 # fit <- modigg$sample(
@@ -160,13 +155,13 @@ p_risk <-
   scale_y_log10() +
   labs(x = "log(IgG concentration)", y = "Predicted risk of colonization",
        colour = "Ethnicity", fill = "Ethnicity",
-       title = "Posterior risk of colonization by serotype (log-log linear model)",
+       title = "Posterior risk of colonization by serotype (linear model, post-booster)",
        subtitle = "Median (line) and 95% credible interval (ribbon)") +
   theme_minimal(base_size = 14) +
   theme(strip.background = element_rect(fill = "grey95", colour = NA))
 
 print(p_risk)
-ggsave(here::here('output', 'postBooster', "lm_risk_curves_by_serotype.png"), p_risk, width = 12, height = 8, dpi = 150)
+ggsave(here::here('output', 'postBooster', "lm_risk_curve.png"), p_risk, width = 12, height = 8, dpi = 150)
 
 #serotype-specific slope summary (log-log linear analogue of the change-point plot)
 slope_summary <- summ %>%
@@ -184,4 +179,4 @@ p_slope <-
   theme_minimal(base_size = 11)
 
 print(p_slope)
-ggsave(here::here('output', 'postBooster', "lm_slope_by_serotype.png"), p_slope, width = 8, height = 5, dpi = 150)
+ggsave(here::here('output', 'postBooster', "lm_slope.png"), p_slope, width = 8, height = 5, dpi = 150)
