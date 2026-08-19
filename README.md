@@ -57,13 +57,12 @@ is used e.g., `mu_cp ~ N(mean(log_GMC), 1 / (2·var(log_GMC)))` for the change-p
 -   VE_PCV13[s] = 1 - (1 - VE0) * RR_{13v7}[s]
 -   VE_PCV15[s] = 1 - (1 - VE0) * RR_{13v7}[s] * RR_{15v13}[s]
 -   VE_PCV20[s] = 1 - (1 - VE0) * RR_{13v7}[s] * RR_{20v13}[s]
--
+
 - for PCV13-only serotypes (1, 3, 5, 6A, 7F, 19A): PCV7 confers no
 -   antibody-mediated protection because the serotype is not in PCV7, so VE0(PCV7) = 0 and the change-point model's RR_{13v7}[s] (computed
 -   from the head-to-head data, where PCV7-arm IgG is at baseline for these serotypes) gives the absolute VE for PCV13 directly:
 -     VE_PCV13[s] = 1 - RR_{13v7}[s]
 -     VE_PCV15[s] = 1 - RR_{13v7}[s] * RR_{15v13}[s]
 -     VE_PCV20[s] = 1 - RR_{13v7}[s] * RR_{20v13}[s]
--
-- Uncertainty is propagated by Monte-Carlo: for each serotype × comparison we draw log-RR ~ N(pooled_logRR, se_logRR) 
-- and chain through, reported intervals are the empirical 2.5 / 97.5 quantiles
+
+- Uncertainty is propagated by Monte-Carlo: for each serotype × comparison we draw log-RR ~ N(pooled_logRR, se_logRR) and chain through, reported intervals are the empirical 2.5 / 97.5 quantiles
