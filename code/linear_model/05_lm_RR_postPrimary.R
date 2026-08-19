@@ -3,11 +3,6 @@
 
 # ============================================================================
 
-# LOG-LOG LINEAR model version of 05_relative_RR_postPrimary.R.
-# Uses the post-primary linear fit and post-primary head-to-head IgG files.
-
-# ============================================================================
-
 #set seed for reproducibility
 set.seed(20250530)
 
@@ -81,9 +76,9 @@ calc_RR <- function(df, pcv_low, pcv_high, ethnic = "jewish") {
 
 get_wtRR <- function(df_RR, comparison) {
   df_RR %>%
-    mutate(inv_var = 1 / (sd_logRR^2)) %>%
-    group_by(serotype) %>%
-    summarise(
+    dplyr::mutate(inv_var = 1 / (sd_logRR^2)) %>%
+    dplyr::group_by(serotype) %>%
+    dplyr::summarise(
       total_inv_var = sum(inv_var),
       pooled_logRR  = sum(logRR * inv_var) / total_inv_var,
       se_logRR      = sqrt(1 / total_inv_var),
@@ -119,8 +114,8 @@ for (cmp in names(comparisons)) {
 df_per_study <- bind_rows(per_study)
 df_pooled    <- bind_rows(pooled)
 
-write_csv(df_per_study, here::here("output", 'postPrimary', "lm_rVE_per_study.csv"))
-write_csv(df_pooled,    here::here("output", 'postPrimary', "lm_rVE_pooled.csv"))
+write_csv(df_per_study, here::here("output", 'postPrimary', "lm_RR_per_study.csv"))
+write_csv(df_pooled,    here::here("output", 'postPrimary', "lm_RR_pooled.csv"))
 
 df_plot <-
   df_pooled %>%
@@ -165,7 +160,7 @@ p_combined <-
     caption  = "RR > 1 indicates higher risk with the higher-valency PCV")
 print(p_combined)
 
-ggsave(here::here("output", 'postPrimary', "lm_relative_VE.png"), p_combined, width = 12, height = 9, dpi = 150)
+ggsave(here::here("output", 'postPrimary', "lm_RR_colonisation.png"), p_combined, width = 12, height = 9, dpi = 150)
 
 for (cmp in names(comparisons)) {
   d <-
@@ -195,8 +190,8 @@ for (cmp in names(comparisons)) {
     theme_bw(base_size = 9) +
     theme(strip.background = element_rect(fill = "grey95", colour = NA))
 
-  ggsave(here::here("output", 'postPrimary', paste0("lm_per_study_RR_", gsub(" ", "_", cmp), ".png")), pp, width = 11, height = 8, dpi = 150)
+  ggsave(here::here("output", 'postPrimary', paste0("lm_RR_per_study_", gsub(" ", "_", cmp), ".png")), pp, width = 11, height = 8, dpi = 150)
 }
 
-df_pooledNS <- print(df_plot %>% select(Comparison, serotype, RR, lci_RR, uci_RR), n = Inf)
-write_csv(df_pooledNS, here::here("output", 'postPrimary', "lm_rVE_pooled_exp.csv"))
+df_pooledNS <- print(df_plot %>% dplyr::select(Comparison, serotype, RR, lci_RR, uci_RR), n = Inf)
+write_csv(df_pooledNS, here::here("output", 'postPrimary', "lm_RR_pooled_exp.csv"))

@@ -2,23 +2,6 @@
 #06/17/2026
 
 # ============================================================================
-# Fit the LOG-LOG LINEAR hierarchical Bayesian model to the post-PRIMARY
-# (age 7m IgG, observations 7-24m) data with NUTS.  Counterpart of
-# 04_changepoint_postPrimary.R but with no change point.
-# ============================================================================
-
-#load packages
-suppressPackageStartupMessages({
-  library(cmdstanr)
-  library(posterior)
-  library(bayesplot)
-  library(dplyr)
-  library(tidyr)
-  library(ggplot2)
-  library(readr)
-  library(readxl)
-  library(patchwork)
-})
 
 #set seed for reproducibility
 set.seed(20250530)
@@ -57,7 +40,7 @@ stan_data <- list(
 )
 
 #compile stan code
-modigg <- cmdstanr::cmdstan_model(here::here('code', 'linear_model', '00_linear_model.stan'))
+#modigg <- cmdstanr::cmdstan_model(here::here('code', 'linear_model', '00_linear_model.stan'))
 
 # #fit the stan model (this take considerable 30 minutes to runs)
 # fit <- modigg$sample(
@@ -165,7 +148,7 @@ p_risk <-
   theme(strip.background = element_rect(fill = "grey95", colour = NA))
 
 print(p_risk)
-ggsave(here::here('output', 'postPrimary', "lm_risk_curves_by_serotype.png"), p_risk, width = 12, height = 8, dpi = 150)
+ggsave(here::here('output', 'postPrimary', "lm_risk_curve.png"), p_risk, width = 12, height = 8, dpi = 150)
 
 #serotype-specific slope summary
 slope_summary <- summ %>%
@@ -182,4 +165,4 @@ p_slope <-
   theme_minimal(base_size = 11)
 
 print(p_slope)
-ggsave(here::here('output', 'postPrimary', "lm_slope_by_serotype.png"), p_slope, width = 8, height = 5, dpi = 150)
+ggsave(here::here('output', 'postPrimary', "lm_slope.png"), p_slope, width = 8, height = 5, dpi = 150)

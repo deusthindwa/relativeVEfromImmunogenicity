@@ -3,16 +3,6 @@
 
 # ============================================================================
 
-#for each head-to-head trial (PCV13 vs PCV7, PCV15 vs PCV13, PCV20 vs PCV13, PCV14 vs PCV13, PCV25 vs PCV13):
-#for each posterior draw, 
-#sample a log-GMC for each PCV from N(log(GMC), SE_logGMC^2) and predict the log-risk of colonization from the change-point model;
-#compute log-RR = log-risk(higher PCV) - log-risk(lower PCV) per draw,
-#summarise as median + 95% credible interval + SD;
-#pool study-level estimates within a comparison with inverse-variance
-#weights (1 / SD^2).
-
-# ============================================================================
-
 #set seed for reproducibility
 set.seed(20250530)
 
@@ -97,9 +87,9 @@ calc_RR <- function(df, pcv_low, pcv_high, ethnic = "jewish") {
 #inverse-variance pooled mean across studies, per serotype.
 get_wtRR <- function(df_RR, comparison) {
   df_RR %>%
-    mutate(inv_var = 1 / (sd_logRR^2)) %>%
-    group_by(serotype) %>%
-    summarise(
+    dplyr::mutate(inv_var = 1 / (sd_logRR^2)) %>%
+    dplyr::group_by(serotype) %>%
+    dplyr::summarise(
       total_inv_var = sum(inv_var),
       pooled_logRR  = sum(logRR * inv_var) / total_inv_var,
       se_logRR      = sqrt(1 / total_inv_var),
@@ -107,9 +97,9 @@ get_wtRR <- function(df_RR, comparison) {
       uci_logRR     = pooled_logRR + 1.96 * se_logRR,
       .groups       = "drop"
     ) %>%
-    mutate(Comparison = comparison,
+    dplyr::mutate(Comparison = comparison,
            serotype   = factor(serotype, levels = serotypes)) %>%
-    arrange(serotype)
+    dplyr::arrange(serotype)
 }
 
 #run the three head-to-head comparisons
@@ -128,15 +118,15 @@ for (cmp in names(comparisons)) {
   stopifnot(file.exists(cfg$file))
   df  <- log_transform_igg(cfg$file)
   per_study[[cmp]] <- calc_RR(df, cfg$pcv_low, cfg$pcv_high) %>% mutate(Comparison = cmp)
-  pooled[[cmp]]    <- get_wtRR(per_study[[cmp]], cmp)
+  pooled[[cmp]] <- get_wtRR(per_study[[cmp]], cmp)
   cat(sprintf("  %s : %d studies, %d serotype-rows\n", cmp, length(unique(per_study[[cmp]]$study_id)), nrow(per_study[[cmp]])))
 }
 
 df_per_study <- bind_rows(per_study)
 df_pooled    <- bind_rows(pooled)
 
-write_csv(df_per_study, here::here("output", 'postBooster', "rVE_per_study.csv"))
-write_csv(df_pooled, here::here("output", 'postBooster', "rVE_pooled.csv"))
+write_csv(df_per_study, here::here("output", 'postBooster', "cp_RR_per_study.csv"))
+write_csv(df_pooled, here::here("output", 'postBooster', "cp_RR_pooled.csv"))
 
 #plot pooled RR for shared 7 PCV7 serotypes and for PCV13 extra 6 serotypes 
 df_plot <- 
@@ -180,7 +170,7 @@ p_combined <-
     caption  = "RR > 1 indicates higher risk with the higher-valency PCV")
 print(p_combined)
 
-ggsave(here::here("output", 'postBooster', "relative_VE.png"), p_combined, width = 12, height = 9, dpi = 150)
+ggsave(here::here("output", 'postBooster', "cp_RR_colonisation.png"), p_combined, width = 12, height = 9, dpi = 150)
 
 #per-study forest plots
 for (cmp in names(comparisons)) {
@@ -211,10 +201,10 @@ for (cmp in names(comparisons)) {
     theme_bw(base_size = 9) +
     theme(strip.background = element_rect(fill = "grey95", colour = NA))
   
-  ggsave(here::here("output", 'postBooster', paste0("per_study_RR_", gsub(" ", "_", cmp), ".png")), pp, width = 11, height = 8, dpi = 150)
+  ggsave(here::here("output", 'postBooster', paste0("cp_RR_per_study_", gsub(" ", "_", cmp), ".png")), pp, width = 11, height = 8, dpi = 150)
 }
 
 #pooled estimates
-df_pooledNS <- print(df_plot %>% select(Comparison, serotype, RR, lci_RR, uci_RR), n = Inf)
-write_csv(df_pooledNS, here::here("output", 'postBooster', "rVE_pooled_exp.csv"))
+df_pooledNS <- print(df_plot %>% dplyr::select(Comparison, serotype, RR, lci_RR, uci_RR), n = Inf)
+write_csv(df_pooledNS, here::here("output", 'postBooster', "cp_RR_pooled_exp.csv"))
 

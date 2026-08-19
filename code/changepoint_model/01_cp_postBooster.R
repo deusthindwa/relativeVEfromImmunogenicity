@@ -3,18 +3,17 @@
 
 # ============================================================================
 
-#load packages
-suppressPackageStartupMessages({
-  library(cmdstanr)
-  library(posterior)
-  library(bayesplot)
-  library(dplyr)
-  library(tidyr)
-  library(ggplot2)
-  library(readr)
-  library(readxl)
-  library(patchwork)
-})
+#load the require packages
+if (!require(pacman)){
+  install.packages("pacman")
+  install.packages("RcmdrPlugin.KMggplot2")
+}
+
+pacman::p_load(
+  char = c("tidyverse","remotes", "ggplot2", "dplyr","rio","tidyr","plyr","lubridate","reshape2","curl","patchwork", "posterior",
+           "deSolve","adaptivetau","data.table","scales","readr","MASS","rootSolve", "labelVector","PropCIs", "bayesplot", "readr",
+           "binom","coda","Rcpp","gmm","RcppArmadillo","devtools","lattice", "RColorBrewer", "lhs","png", "cmdstanr", "tibble",
+           "readxl","viridis","zoo","lattice","latex2exp","ape","cowplot","gridExtra","grid","ggpubr","here","deSolve", "loo"))
 
 #set seed for reproducibility
 set.seed(20250530)
@@ -38,8 +37,8 @@ dat <-
 
 #summary stats about the data
 print(dat %>% 
-        group_by(Serotype) %>% 
-        summarise(N = n(), n_col = sum(Colonization), .groups = "drop"))
+        dplyr::group_by(Serotype) %>% 
+        dplyr::summarise(N = n(), n_col = sum(Colonization), .groups = "drop"))
 
 #compile and fit the Stan model with NUTS
 stan_data <- list(
@@ -55,7 +54,7 @@ stan_data <- list(
 )
 
 #compile stan code
-modigg <- cmdstanr::cmdstan_model(here::here('code', '00_changepoint_model.stan'))
+#modigg <- cmdstanr::cmdstan_model(here::here('code', '00_changepoint_model.stan'))
 
 #fit the stan model (this take considerable 30 minutes to runs)
 # fit <- modigg$sample(
@@ -92,22 +91,22 @@ postBooster_fit$diagnostic_summary()
 bayesplot::color_scheme_set("brightblue")
 trace_plot <- mcmc_trace(draws, pars = diag_pars, facet_args = list(ncol = 1))
 trace_plot
-ggsave(here::here('output', 'postBooster', "trace_hypers.png"), trace_plot, width = 10, height = 10, dpi = 150)
+ggsave(here::here('output', 'postBooster', "cp_trace_hypers.png"), trace_plot, width = 10, height = 10, dpi = 150)
 
 dens_plot <- mcmc_dens_overlay(draws, pars = diag_pars)
 dens_plot
-ggsave(here::here('output', 'postBooster', "dens_hypers.png"), dens_plot, width = 10, height = 6, dpi = 150)
+ggsave(here::here('output', 'postBooster', "cp_dens_hypers.png"), dens_plot, width = 10, height = 6, dpi = 150)
 
 #density plots
 for (par in c("b0", "b1", "b3", "cp")) {
   pars_par <- paste0(par, "[", 1:13, "]")
   
-  ggsave(here::here('output', 'postBooster', paste0("trace_", par, ".png")),
+  ggsave(here::here('output', 'postBooster', paste0("cp_trace_", par, ".png")),
          mcmc_trace(draws, pars = pars_par,
                     facet_args = list(ncol = 4)),
          width = 12, height = 8, dpi = 150)
   
-  ggsave(here::here('output', 'postBooster', paste0("dens_", par, ".png")),
+  ggsave(here::here('output', 'postBooster', paste0("cp_dens_", par, ".png")),
          mcmc_dens_overlay(draws, pars = pars_par,
                            facet_args = list(ncol = 4)),
          width = 12, height = 8, dpi = 150)
@@ -116,7 +115,7 @@ for (par in c("b0", "b1", "b3", "cp")) {
 #pairs plot for a couple of serotypes to inspect funnel or correlations
 pairs_plot <- mcmc_pairs(draws, pars = c("b0[1]", "b1[1]", "cp[1]", "b3[1]"))
 print(pairs_plot)
-ggsave(here::here('output', 'postBooster', "pairs_st1.png"), pairs_plot, width = 8, height = 8, dpi = 150)
+ggsave(here::here('output', 'postBooster', "cp_pairs_st1.png"), pairs_plot, width = 8, height = 8, dpi = 150)
 
 #posterior predictive risk curves
 post_mat <- as.matrix(postBooster_fit$draws(variables = c("b0", "b1", "b3", "cp"), format = "draws_matrix"))
@@ -160,12 +159,13 @@ p_risk <-
   #geom_vline(xintercept = 0, color = "gray", linetype = "dashed", size = 0.6) +
   facet_wrap(~ serotype, scales = "free_y", ncol = 5) +
   scale_y_log10() +
-  labs(x = "log(IgG concentration)", y = "Predicted risk of colonization", colour = "Ethnicity", fill = "Ethnicity", title = "Posterior risk of colonization by serotype", subtitle = "Median (line) and 95% credible interval (ribbon)") +
+  labs(x = "log(IgG concentration)", y = "Predicted risk of colonization", colour = "Ethnicity", fill = "Ethnicity", 
+       title = "Posterior risk of colonization by serotype (change point model, post-booster)", subtitle = "Median (line) and 95% credible interval (ribbon)") +
   theme_minimal(base_size = 14) +
   theme(strip.background = element_rect(fill = "grey95", colour = NA))
 
 print(p_risk)
-ggsave(here::here('output', 'postBooster', "risk_curves_by_serotype.png"), p_risk, width = 12, height = 8, dpi = 150)
+ggsave(here::here('output', 'postBooster', "cp_risk_curve.png"), p_risk, width = 12, height = 8, dpi = 150)
 
 #serotype-specific change-point summary
 cp_summary <- summ %>%
@@ -180,4 +180,4 @@ p_cp <-
   theme_minimal(base_size = 11)
 
 print(p_cp)
-ggsave(here::here('output', 'postBooster', "changepoint_by_serotype.png"), p_cp, width = 8, height = 5, dpi = 150)
+ggsave(here::here('output', 'postBooster', "cp_changepoint.png"), p_cp, width = 8, height = 5, dpi = 150)

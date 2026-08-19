@@ -3,26 +3,6 @@
 
 # ============================================================================
 
-# LOG-LOG LINEAR model version of 02_RR_postBooster.R.
-#
-# For each head-to-head trial (PCV13 vs PCV7, PCV13 vs PCV10, PCV14 vs PCV13,
-# PCV15 vs PCV13, PCV20 vs PCV13):
-# for each posterior draw,
-# sample a log-GMC for each PCV from N(log(GMC), SE_logGMC^2) and predict the
-# log-risk of colonization from the LINEAR (no change point) model;
-# compute log-RR = log-risk(higher PCV) - log-risk(lower PCV) per draw,
-# summarise as median + 95% credible interval + SD;
-# pool study-level estimates within a comparison with inverse-variance
-# weights (1 / SD^2).
-
-# For the linear model this reduces analytically to
-#   log(RR)_s = b1[s] * (log_GMC_high - log_GMC_low) = b1[s] * log(GMR)
-# but we keep the same posterior-sample -> per-draw log-RR machinery as the
-# change-point code so that trial-level GMC uncertainty is propagated in
-# exactly the same way.
-
-# ============================================================================
-
 #set seed for reproducibility
 set.seed(20250530)
 
@@ -105,9 +85,9 @@ calc_RR <- function(df, pcv_low, pcv_high, ethnic = "jewish") {
 #inverse-variance pooled mean across studies, per serotype.
 get_wtRR <- function(df_RR, comparison) {
   df_RR %>%
-    mutate(inv_var = 1 / (sd_logRR^2)) %>%
-    group_by(serotype) %>%
-    summarise(
+    dplyr::mutate(inv_var = 1 / (sd_logRR^2)) %>%
+    dplyr::group_by(serotype) %>%
+    dplyr::summarise(
       total_inv_var = sum(inv_var),
       pooled_logRR  = sum(logRR * inv_var) / total_inv_var,
       se_logRR      = sqrt(1 / total_inv_var),
@@ -143,8 +123,8 @@ for (cmp in names(comparisons)) {
 df_per_study <- bind_rows(per_study)
 df_pooled <- bind_rows(pooled)
 
-write_csv(df_per_study, here::here("output", 'postBooster', "lm_rVE_per_study.csv"))
-write_csv(df_pooled,    here::here("output", 'postBooster', "lm_rVE_pooled.csv"))
+write_csv(df_per_study, here::here("output", 'postBooster', "lm_RR_per_study.csv"))
+write_csv(df_pooled,    here::here("output", 'postBooster', "lm_RR_pooled.csv"))
 
 #plot pooled RR for shared 7 PCV7 serotypes and for PCV13 extra 6 serotypes
 df_plot <-
@@ -188,7 +168,7 @@ p_combined <-
     caption  = "RR > 1 indicates higher risk with the higher-valency PCV")
 print(p_combined)
 
-ggsave(here::here("output", 'postBooster', "lm_relative_VE.png"), p_combined, width = 12, height = 9, dpi = 150)
+ggsave(here::here("output", 'postBooster', "lm_RR_colonisation.png"), p_combined, width = 12, height = 9, dpi = 150)
 
 #per-study forest plots
 for (cmp in names(comparisons)) {
@@ -219,9 +199,9 @@ for (cmp in names(comparisons)) {
     theme_bw(base_size = 9) +
     theme(strip.background = element_rect(fill = "grey95", colour = NA))
 
-  ggsave(here::here("output", 'postBooster', paste0("lm_per_study_RR_", gsub(" ", "_", cmp), ".png")), pp, width = 11, height = 8, dpi = 150)
+  ggsave(here::here("output", 'postBooster', paste0("lm_RR_per_study_", gsub(" ", "_", cmp), ".png")), pp, width = 11, height = 8, dpi = 150)
 }
 
 #pooled estimates
-df_pooledNS <- print(df_plot %>% select(Comparison, serotype, RR, lci_RR, uci_RR), n = Inf)
-write_csv(df_pooledNS, here::here("output", 'postBooster', "lm_rVE_pooled_exp.csv"))
+df_pooledNS <- print(df_plot %>% dplyr::select(Comparison, serotype, RR, lci_RR, uci_RR), n = Inf)
+write_csv(df_pooledNS, here::here("output", 'postBooster', "lm_RR_pooled_exp.csv"))

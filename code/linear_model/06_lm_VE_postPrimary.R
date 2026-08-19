@@ -2,11 +2,9 @@
 #06/17/2026
 
 # ============================================================================
-# LINEAR-model absolute VE (post-primary).  Counterpart of 06_VE_postPrimary.R.
-# ============================================================================
 
 #set seed for reproducibility
-set.seed(20260605L)
+set.seed(20250530)
 
 #set VE0
 cli <- commandArgs(trailingOnly = TRUE)
@@ -18,8 +16,8 @@ pcv7_st <- c("4", "6B", "9V", "14", "18C", "19F", "23F")
 pcv13_extra <- c("1", "3", "5", "6A", "7F", "19A")
 serotypes <- c(pcv7_st, pcv13_extra)
 
-rr <- read_csv(here::here('output', 'postPrimary', 'lm_rVE_pooled.csv'), show_col_types = FALSE) %>%
-  mutate(serotype = factor(serotype, levels = serotypes),
+rr <- read_csv(here::here('output', 'postPrimary', 'lm_RR_pooled.csv'), show_col_types = FALSE) %>%
+  dplyr::mutate(serotype = factor(serotype, levels = serotypes),
          Comparison = factor(Comparison,
                              levels = c("PCV13 vs PCV7",
                                         "PCV13 vs PCV10",
@@ -28,7 +26,7 @@ rr <- read_csv(here::here('output', 'postPrimary', 'lm_rVE_pooled.csv'), show_co
                                         "PCV20 vs PCV13")))
 
 rr_wide <- rr %>%
-  select(serotype, Comparison, pooled_logRR, se_logRR) %>%
+  dplyr::select(serotype, Comparison, pooled_logRR, se_logRR) %>%
   pivot_wider(names_from  = Comparison,
               values_from = c(pooled_logRR, se_logRR))
 
@@ -80,7 +78,7 @@ abs_ve <- abs_ve %>%
          in_pcv7  = serotype %in% pcv7_st) %>%
   arrange(serotype, vaccine)
 
-write_csv(abs_ve, here::here('output', 'postPrimary', sprintf("lm_absolute_VE_ve0_%02d.csv", round(VE0 * 100))))
+write_csv(abs_ve, here::here('output', 'postPrimary', sprintf("lm_abs_rel_VE.csv", round(VE0 * 100))))
 
 print(abs_ve %>% transmute(serotype,
                            vaccine,
@@ -98,7 +96,7 @@ p_absolute <-
   scale_y_continuous(limits = c(0.35, 0.75), labels = scales::percent, n.breaks = 6) +
   scale_colour_manual(values = c("PCV10" = "green4", "PCV13" = "steelblue4", "PCV14" = "gray40", "PCV15" = "darkorange2", "PCV20" = "firebrick")) +
   labs(x = "Serotype", y = "Absolute vaccine efficacy \nagainst colonization (%)", colour = "Vaccine",
-       title = "VE against colonization (linear post-primary), chained from RR estimates",
+       title = "VE against colonization, chained from RR estimates (linear model, post-primary)",
        subtitle = sprintf("Assumed VE(PCV7) = %.0f%% for PCV7 serotypes and 0%% for the six PCV13-only serotypes", 100 * VE0)) +
   theme_bw(base_size = 11) +
   theme(panel.grid.minor = element_blank(), legend.position  = "top")
@@ -120,4 +118,4 @@ p_relative <-
 print(p_relative)
 
 print(p_absolute/p_relative)
-ggsave(here::here('output', 'postPrimary', sprintf("lm_absolute_VE_ve0_%02d.png", round(VE0 * 100))), p_absolute, width = 11, height = 6, dpi = 150)
+ggsave(here::here('output', 'postPrimary', sprintf("lm_abs_rel_VE.png", round(VE0 * 100))), p_absolute/p_relative, width = 12, height = 8, dpi = 150)
